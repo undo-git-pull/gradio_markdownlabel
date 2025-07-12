@@ -145,25 +145,15 @@ with gr.Blocks(title="Markdown Label Demo") as demo:
     gr.Markdown("# MarkdownLabel Component Demo")
     gr.Markdown("This demo showcases the MarkdownLabel component with **both term-based and position-based** interactive highlighting and detailed side panel.")
     
-    with gr.Row():
-        with gr.Column():
-            gr.Markdown("## Full Featured Example")
-            gr.Markdown("Includes both term-based (e.g., 'artificial intelligence') and position-based highlighting (yellow highlights).")
-            MarkdownLabel(
-                value=example_data,
-                label="AI Research Report - Mixed Highlighting",
-                show_side_panel=True,
-                panel_width="350px"
-            )
-        
-        with gr.Column():
-            gr.Markdown("## Compact View")
-            gr.Markdown("Same content without the side panel for a cleaner interface.")
-            MarkdownLabel(
-                value=example_data, 
-                label="Compact View",
-                show_side_panel=False
-            )
+    gr.Markdown("## Example")
+    gr.Markdown("Includes both term-based (e.g., 'artificial intelligence') and position-based highlighting (yellow highlights).")
+    MarkdownLabel(
+        value=example_data,
+        label="AI Research Report - Mixed Highlighting",
+        show_side_panel=True,
+        panel_width="350px",
+        interactive=True
+    )
     
     # Simple position-based example
     simple_example = {
