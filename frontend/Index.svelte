@@ -21,7 +21,8 @@
 	export let value: {
 		markdown_content: string;
 		highlights: Array<{
-			term: string;
+			term?: string;
+			position?: number[];
 			title: string;
 			content: string;
 			category: string;

@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 
 
 class HighlightDefinition(GradioModel):
-    term: str
+    term: str = ""
+    position: list[int] = []  # [start, end] character positions
     title: str = ""
     content: str = ""
     category: str = ""
@@ -119,6 +120,13 @@ class MarkdownLabel(Component):
                     "content": "AI refers to computer systems that can perform tasks typically requiring human intelligence.",
                     "category": "technology",
                     "color": "#e3f2fd"
+                },
+                {
+                    "position": [74, 90],
+                    "title": "Machine Learning",
+                    "content": "ML is a subset of AI that focuses on algorithms that learn from data.",
+                    "category": "technology",
+                    "color": "#f3e5f5"
                 }
             ]
         }
@@ -133,6 +141,13 @@ class MarkdownLabel(Component):
                     "content": "AI refers to computer systems that can perform tasks typically requiring human intelligence.",
                     "category": "technology",
                     "color": "#e3f2fd"
+                },
+                {
+                    "position": [74, 90],
+                    "title": "Machine Learning",
+                    "content": "ML is a subset of AI that focuses on algorithms that learn from data.",
+                    "category": "technology",
+                    "color": "#f3e5f5"
                 }
             ]
         }
@@ -178,6 +193,7 @@ class MarkdownLabel(Component):
             if isinstance(highlight, dict):
                 processed_highlights.append(HighlightDefinition(
                     term=highlight.get("term", ""),
+                    position=highlight.get("position", []),
                     title=highlight.get("title", ""),
                     content=highlight.get("content", ""),
                     category=highlight.get("category", ""),

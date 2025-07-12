@@ -5,7 +5,8 @@
 
 	export let markdown_content: string = '';
 	export let highlights: Array<{
-		term: string;
+		term?: string;
+		position?: number[];
 		title: string;
 		content: string;
 		category: string;
@@ -26,9 +27,39 @@
 		if (markdown_content) {
 			let html = marked(markdown_content);
 			
-			// Apply highlights to the HTML
-			highlights.forEach((highlight, index) => {
+			// Separate position-based and term-based highlights
+			const positionHighlights = highlights.filter(h => h.position && h.position.length === 2);
+			const termHighlights = highlights.filter(h => h.term && h.term.trim());
+			
+			// Apply position-based highlights first (to the original markdown)
+			let highlightedMarkdown = markdown_content;
+			
+			// Sort position highlights by start position (descending) to avoid offset issues
+			const sortedPositionHighlights = [...positionHighlights]
+				.map((highlight, index) => ({ ...highlight, originalIndex: highlights.indexOf(highlight) }))
+				.sort((a, b) => b.position![0] - a.position![0]);
+			
+			sortedPositionHighlights.forEach(highlight => {
+				const [start, end] = highlight.position!;
+				if (start >= 0 && end <= highlightedMarkdown.length && start < end) {
+					const before = highlightedMarkdown.substring(0, start);
+					const target = highlightedMarkdown.substring(start, end);
+					const after = highlightedMarkdown.substring(end);
+					const color = highlight.color || '#e3f2fd';
+					
+					// Create a unique marker that won't interfere with markdown parsing
+					const marker = `<span class="highlight-position" data-index="${highlight.originalIndex}" data-text="${encodeURIComponent(target)}" style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;">${target}</span>`;
+					highlightedMarkdown = before + marker + after;
+				}
+			});
+			
+			// Parse the markdown with position highlights already embedded
+			html = marked(highlightedMarkdown);
+			
+			// Apply term-based highlights to the HTML
+			termHighlights.forEach(highlight => {
 				if (highlight.term && highlight.term.trim()) {
+					const index = highlights.indexOf(highlight);
 					const regex = new RegExp(`\\b${escapeRegex(highlight.term)}\\b`, 'gi');
 					html = html.replace(regex, (match) => {
 						const color = highlight.color || '#e3f2fd';
@@ -52,7 +83,7 @@
 
 	function handleTermClick(event: Event) {
 		const target = event.target as HTMLElement;
-		if (target.classList.contains('highlight-term')) {
+		if (target.classList.contains('highlight-term') || target.classList.contains('highlight-position')) {
 			const index = parseInt(target.dataset.index || '0');
 			const highlight = highlights[index];
 			if (highlight) {
@@ -78,7 +109,7 @@
 	{#if show_side_panel && selectedHighlight}
 		<div class="side-panel" style="width: {panel_width}">
 			<div class="panel-header">
-				<h3>{selectedHighlight.title || selectedHighlight.term}</h3>
+				<h3>{selectedHighlight.title || selectedHighlight.term || 'Highlighted Text'}</h3>
 				<button class="close-btn" on:click={closeSidePanel}>×</button>
 			</div>
 			<div class="panel-content">
@@ -245,7 +276,8 @@
 		padding: 0;
 	}
 
-	.markdown-content :global(.highlight-term:hover) {
+	.markdown-content :global(.highlight-term:hover),
+	.markdown-content :global(.highlight-position:hover) {
 		opacity: 0.8;
 		transform: scale(1.02);
 	}

@@ -71,6 +71,13 @@ As **artificial intelligence** continues to advance, we expect to see more sophi
             "color": "#fce4ec"
         },
         {
+            "position": [615, 632],
+            "title": "Computer Vision (Position-based)",
+            "content": "**Computer Vision** highlighted by character position rather than term matching. This demonstrates precise control over highlighting specific text segments.\n\n### Position-based Benefits:\n- Exact character-level precision\n- No ambiguity with similar terms\n- Works with any text, including special characters\n- Useful for pre-processed documents",
+            "category": "Position Highlight",
+            "color": "#ffeb3b"
+        },
+        {
             "term": "computer vision",
             "title": "Computer Vision", 
             "content": "**Computer Vision** is a field of AI that enables machines to interpret and understand visual information from the world, mimicking human vision capabilities.\n\n### Key Tasks:\n- **Object Detection**: Locating objects in images\n- **Image Classification**: Categorizing images\n- **Semantic Segmentation**: Pixel-level understanding\n- **Face Recognition**: Identifying individuals\n\n### Applications:\n- Autonomous vehicles\n- Medical imaging\n- Security systems\n- Augmented reality",
@@ -83,31 +90,77 @@ As **artificial intelligence** continues to advance, we expect to see more sophi
             "content": "**Reinforcement Learning** is a type of machine learning where an agent learns to make decisions by performing actions in an environment to maximize cumulative reward.\n\n### Key Concepts:\n- **Agent**: The learner/decision maker\n- **Environment**: The world the agent interacts with\n- **Actions**: Choices available to the agent\n- **Rewards**: Feedback from the environment\n- **Policy**: Strategy for choosing actions\n\n### Famous Applications:\n- Game playing (AlphaGo, OpenAI Five)\n- Robotics control\n- Trading algorithms\n- Resource allocation",
             "category": "Learning Paradigm",
             "color": "#f1f8e9"
+        },
+        {
+            "position": [169, 190],
+            "title": "Machine Learning (Position)",
+            "content": "This **machine learning** instance is highlighted using position-based highlighting at characters 169-190.\n\n### Position Highlighting Use Cases:\n- Academic paper annotations\n- Legal document markup\n- Code documentation\n- Precise text analysis\n\nPosition-based highlighting ensures exact text selection without ambiguity.",
+            "category": "Position Demo",
+            "color": "#e8eaf6"
         }
     ]
 }
 
 with gr.Blocks(title="Markdown Label Demo") as demo:
     gr.Markdown("# MarkdownLabel Component Demo")
-    gr.Markdown("This demo showcases the MarkdownLabel component with interactive highlighting and detailed side panel.")
+    gr.Markdown("This demo showcases the MarkdownLabel component with **both term-based and position-based** interactive highlighting and detailed side panel.")
     
     with gr.Row():
         with gr.Column():
-            gr.Markdown("## Basic Example")
+            gr.Markdown("## Full Featured Example")
+            gr.Markdown("Includes both term-based (e.g., 'artificial intelligence') and position-based highlighting (yellow highlights).")
             MarkdownLabel(
                 value=example_data,
-                label="AI Research Report",
+                label="AI Research Report - Mixed Highlighting",
                 show_side_panel=True,
                 panel_width="350px"
             )
         
         with gr.Column():
-            gr.Markdown("## Without Side Panel")
+            gr.Markdown("## Compact View")
+            gr.Markdown("Same content without the side panel for a cleaner interface.")
             MarkdownLabel(
                 value=example_data, 
                 label="Compact View",
                 show_side_panel=False
             )
+    
+    # Simple position-based example
+    simple_example = {
+        "markdown_content": "The quick **brown fox** jumps over the lazy dog. This is a simple example.",
+        "highlights": [
+            {
+                "position": [4, 9],  # "quick"
+                "title": "Quick (Position 4-9)",
+                "content": "Highlighted using exact character positions 4-9.",
+                "category": "Position Demo",
+                "color": "#ffeb3b"
+            },
+            {
+                "term": "brown fox",
+                "title": "Brown Fox (Term Match)",
+                "content": "Highlighted using term matching.",
+                "category": "Term Demo", 
+                "color": "#e3f2fd"
+            },
+            {
+                "position": [35, 43],  # "the lazy"
+                "title": "The Lazy (Position 35-43)", 
+                "content": "Another position-based highlight at characters 35-43.",
+                "category": "Position Demo",
+                "color": "#f3e5f5"
+            }
+        ]
+    }
+    
+    gr.Markdown("## Position vs Term Highlighting Comparison")
+    gr.Markdown("This example shows the difference between position-based (yellow/purple) and term-based (blue) highlighting.")
+    MarkdownLabel(
+        value=simple_example,
+        label="Simple Position vs Term Example",
+        show_side_panel=True,
+        panel_width="300px"
+    )
 
 if __name__ == "__main__":
     demo.launch()
