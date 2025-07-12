@@ -14,19 +14,39 @@
 	}> = [];
 	export let show_side_panel: boolean = true;
 	export let panel_width: string = '300px';
+	export let interactive: boolean = false;
+	export let edit_mode: string = 'split'; // 'split', 'tabs', 'overlay'
+	export let show_preview: boolean = true;
+	export const markdown_editor: string = 'textarea';
 
 	const dispatch = createEventDispatcher<{
 		select: SelectData;
+		change: { markdown_content: string; highlights: any[] };
+		edit: { markdown_content: string; highlights: any[] };
+		save: { markdown_content: string; highlights: any[] };
+		cancel: { markdown_content: string; highlights: any[] };
 	}>();
 
 	let selectedHighlight: typeof highlights[0] | null = null;
 	let processedHtml: string = '';
+	let isEditing: boolean = false;
+	let editingContent: string = '';
+	let originalContent: string = '';
+	let currentTab: 'edit' | 'preview' | 'highlights' = 'edit';
+
+	// Track original state for cancel functionality
+	$: {
+		if (!isEditing) {
+			originalContent = markdown_content;
+		}
+	}
 
 	// Process markdown and apply highlighting
 	$: {
-		if (markdown_content) {
+		const contentToRender = isEditing && edit_mode === 'split' && show_preview ? editingContent : markdown_content;
+		if (contentToRender) {
 			// First, parse the markdown to HTML
-			let html = marked(markdown_content);
+			let html = marked(contentToRender);
 			
 			// Separate position-based and term-based highlights
 			const positionHighlights = highlights.filter(h => h.position && h.position.length === 2);
@@ -56,8 +76,8 @@
 			// Convert position-based highlights to term-based for simplicity and reliability
 			positionHighlights.forEach(highlight => {
 				const [start, end] = highlight.position!;
-				if (start >= 0 && end <= markdown_content.length && start < end) {
-					const targetText = markdown_content.substring(start, end);
+				if (start >= 0 && end <= contentToRender.length && start < end) {
+					const targetText = contentToRender.substring(start, end);
 					const color = highlight.color || '#e3f2fd';
 					const index = highlights.indexOf(highlight);
 					
@@ -118,13 +138,135 @@
 	function closeSidePanel() {
 		selectedHighlight = null;
 	}
+
+	function startEditing() {
+		isEditing = true;
+		editingContent = markdown_content;
+		originalContent = markdown_content;
+		dispatch('edit', { markdown_content, highlights });
+	}
+
+	function saveChanges() {
+		markdown_content = editingContent;
+		isEditing = false;
+		dispatch('save', { markdown_content, highlights });
+		// Only dispatch change event on explicit save
+		dispatch('change', { markdown_content, highlights });
+	}
+
+	function cancelEditing() {
+		editingContent = originalContent;
+		isEditing = false;
+		dispatch('cancel', { markdown_content: originalContent, highlights });
+	}
+
+	function handleTextareaInput(event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		editingContent = target.value;
+		// Don't dispatch change events in real-time to avoid loops
+		// Changes will be dispatched only on save
+	}
+
+	function setTab(tab: typeof currentTab) {
+		currentTab = tab;
+	}
 </script>
 
-<div class="markdown-container" class:with-panel={show_side_panel && selectedHighlight}>
-	<div class="markdown-content" on:click={handleTermClick} on:keydown={handleKeydown} role="document" aria-label="Markdown content with interactive highlights">
-		{@html processedHtml}
+<div class="markdown-container" class:editing={isEditing} class:with-panel={show_side_panel && selectedHighlight}>
+	<!-- Edit Mode Controls -->
+	{#if interactive && !isEditing}
+		<div class="edit-controls">
+			<button class="edit-btn" on:click={startEditing}>
+				✏️ Edit
+			</button>
+		</div>
+	{/if}
+
+	{#if isEditing}
+		<div class="edit-controls">
+			<button class="save-btn" on:click={saveChanges}>
+				💾 Save
+			</button>
+			<button class="cancel-btn" on:click={cancelEditing}>
+				❌ Cancel
+			</button>
+			
+			{#if edit_mode === 'tabs'}
+				<div class="tab-controls">
+					<button 
+						class="tab-btn" 
+						class:active={currentTab === 'edit'}
+						on:click={() => setTab('edit')}
+					>
+						Edit
+					</button>
+					<button 
+						class="tab-btn" 
+						class:active={currentTab === 'preview'}
+						on:click={() => setTab('preview')}
+					>
+						Preview
+					</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<!-- Content Area -->
+	<div class="content-area" class:split-mode={edit_mode === 'split' && isEditing}>
+		{#if isEditing}
+			{#if edit_mode === 'split'}
+				<!-- Split Mode: Editor and Preview Side by Side -->
+				<div class="editor-section">
+					<div class="editor-header">
+						<h4>Markdown Editor</h4>
+					</div>
+					<textarea
+						class="markdown-editor"
+						bind:value={editingContent}
+						on:input={handleTextareaInput}
+						placeholder="Enter your markdown content..."
+						spellcheck="false"
+					></textarea>
+				</div>
+				
+				{#if show_preview}
+					<div class="preview-section">
+						<div class="preview-header">
+							<h4>Live Preview</h4>
+						</div>
+						<div class="markdown-content preview" on:click={handleTermClick} on:keydown={handleKeydown} role="document" aria-label="Markdown preview with interactive highlights">
+							{@html processedHtml}
+						</div>
+					</div>
+				{/if}
+			{:else if edit_mode === 'tabs'}
+				<!-- Tab Mode: Switch between Edit and Preview -->
+				<div class="tab-content">
+					{#if currentTab === 'edit'}
+						<textarea
+							class="markdown-editor fullwidth"
+							bind:value={editingContent}
+							on:input={handleTextareaInput}
+							placeholder="Enter your markdown content..."
+							spellcheck="false"
+						></textarea>
+					{:else if currentTab === 'preview'}
+						<div class="markdown-content preview" on:click={handleTermClick} on:keydown={handleKeydown} role="document" aria-label="Markdown preview with interactive highlights">
+							{@html processedHtml}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		{:else}
+			<!-- View Mode: Regular markdown display -->
+			<div class="markdown-content" on:click={handleTermClick} on:keydown={handleKeydown} role="document" aria-label="Markdown content with interactive highlights">
+				{@html processedHtml}
+			</div>
+		{/if}
 	</div>
 	
+	<!-- Side Panel (same as before) -->
 	{#if show_side_panel && selectedHighlight}
 		<div class="side-panel" style="width: {panel_width}">
 			<div class="panel-header">
@@ -148,9 +290,138 @@
 <style>
 	.markdown-container {
 		display: flex;
+		flex-direction: column;
 		height: 100%;
 		position: relative;
 		transition: all 0.3s ease;
+	}
+
+	.edit-controls {
+		display: flex;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: var(--background-fill-secondary);
+		border-bottom: 1px solid var(--border-color-primary);
+		align-items: center;
+	}
+
+	.edit-btn, .save-btn, .cancel-btn {
+		padding: var(--size-1) var(--size-2);
+		border: 1px solid var(--border-color-primary);
+		border-radius: var(--radius-sm);
+		background: var(--background-fill-primary);
+		cursor: pointer;
+		font-size: var(--text-sm);
+		transition: all 0.2s;
+	}
+
+	.edit-btn:hover {
+		background: var(--background-fill-secondary);
+	}
+
+	.save-btn {
+		background: var(--color-accent);
+		color: white;
+		border-color: var(--color-accent);
+	}
+
+	.save-btn:hover {
+		opacity: 0.9;
+	}
+
+	.cancel-btn {
+		background: var(--color-red-500);
+		color: white;
+		border-color: var(--color-red-500);
+	}
+
+	.cancel-btn:hover {
+		opacity: 0.9;
+	}
+
+	.tab-controls {
+		display: flex;
+		gap: 2px;
+		margin-left: auto;
+	}
+
+	.tab-btn {
+		padding: var(--size-1) var(--size-3);
+		border: 1px solid var(--border-color-primary);
+		background: var(--background-fill-primary);
+		cursor: pointer;
+		font-size: var(--text-sm);
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		transition: all 0.2s;
+	}
+
+	.tab-btn.active {
+		background: var(--background-fill-secondary);
+		border-bottom-color: var(--background-fill-secondary);
+	}
+
+	.tab-btn:hover:not(.active) {
+		background: var(--background-fill-secondary);
+		opacity: 0.7;
+	}
+
+	.content-area {
+		flex: 1;
+		display: flex;
+		overflow: hidden;
+	}
+
+	.content-area.split-mode {
+		flex-direction: row;
+	}
+
+	.editor-section, .preview-section {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		border-right: 1px solid var(--border-color-primary);
+	}
+
+	.preview-section {
+		border-right: none;
+		border-left: 1px solid var(--border-color-primary);
+	}
+
+	.editor-header, .preview-header {
+		padding: var(--size-2);
+		background: var(--background-fill-secondary);
+		border-bottom: 1px solid var(--border-color-primary);
+	}
+
+	.editor-header h4, .preview-header h4 {
+		margin: 0;
+		font-size: var(--text-sm);
+		font-weight: var(--weight-semibold);
+		color: var(--body-text-color);
+	}
+
+	.markdown-editor {
+		flex: 1;
+		width: 100%;
+		padding: var(--size-3);
+		border: none;
+		resize: none;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		line-height: 1.5;
+		background: var(--background-fill-primary);
+		color: var(--body-text-color);
+		outline: none;
+	}
+
+	.markdown-editor.fullwidth {
+		height: 400px;
+	}
+
+	.tab-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.markdown-content {
@@ -158,6 +429,10 @@
 		padding: var(--block-padding);
 		overflow-y: auto;
 		transition: margin-right 0.3s ease;
+	}
+
+	.markdown-content.preview {
+		background: var(--background-fill-primary);
 	}
 
 	.with-panel .markdown-content {
@@ -228,7 +503,7 @@
 		color: var(--body-text-color);
 	}
 
-	/* Markdown styling */
+	/* Markdown styling (same as before) */
 	.markdown-content :global(h1) {
 		font-size: var(--text-2xl);
 		font-weight: var(--weight-bold);
@@ -313,6 +588,20 @@
 		
 		.with-panel .markdown-content {
 			margin-right: 0;
+		}
+
+		.content-area.split-mode {
+			flex-direction: column;
+		}
+
+		.editor-section, .preview-section {
+			border-right: none;
+			border-bottom: 1px solid var(--border-color-primary);
+		}
+
+		.preview-section {
+			border-left: none;
+			border-top: 1px solid var(--border-color-primary);
 		}
 	}
 </style>

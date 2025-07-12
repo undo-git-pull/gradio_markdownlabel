@@ -43,7 +43,7 @@ class MarkdownLabel(Component):
     """
 
     data_model = MarkdownLabelData
-    EVENTS = [Events.change, Events.select]
+    EVENTS = [Events.change, Events.select, Events.edit, Events.submit, Events.clear]
 
     def __init__(
         self,
@@ -51,6 +51,9 @@ class MarkdownLabel(Component):
         *,
         show_side_panel: bool = True,
         panel_width: str = "300px",
+        edit_mode: str = "split",
+        show_preview: bool = True,
+        markdown_editor: str = "textarea",
         label: str | I18nData | None = None,
         every: Timer | float | None = None,
         inputs: Component | Sequence[Component] | set[Component] | None = None,
@@ -72,6 +75,9 @@ class MarkdownLabel(Component):
             value: Dictionary containing markdown_content and highlights array. If a function is provided, the function will be called each time the app loads to set the initial value of this component.
             show_side_panel: Whether to show the detailed information side panel.
             panel_width: Width of the side panel (CSS value like "300px", "25%", etc.).
+            edit_mode: Layout for editing mode - "split" (side-by-side), "tabs", or "overlay".
+            show_preview: Whether to show live preview in edit mode.
+            markdown_editor: Type of markdown editor - "textarea" or "codemirror" (future).
             label: the label for this component. Appears above the component and is also used as the header if there are a table of examples for this component. If None and used in a `gr.Interface`, the label will be the name of the parameter this component is assigned to.
             every: Continously calls `value` to recalculate it if `value` is a function (has no effect otherwise). Can provide a Timer whose tick resets `value`, or a float that provides the regular interval for the reset Timer.
             inputs: Components that are used as inputs to calculate `value` if `value` is a function (has no effect otherwise). `value` is recalculated any time the inputs change.
@@ -85,11 +91,14 @@ class MarkdownLabel(Component):
             render: If False, component will not render be rendered in the Blocks context. Should be used if the intention is to assign event listeners now but render the component later.
             key: in a gr.render, Components with the same key across re-renders are treated as the same component, not a new component. Properties set in 'preserved_by_key' are not reset across a re-render.
             preserved_by_key: A list of parameters from this component's constructor. Inside a gr.render() function, if a component is re-rendered with the same key, these (and only these) parameters will be preserved in the UI (if they have been changed by the user or an event listener) instead of re-rendered based on the values provided during constructor.
-            interactive: If True, the component will be editable (future feature).
+            interactive: If True, the component will be editable allowing users to modify markdown content.
             rtl: If True, will display the text in right-to-left direction.
         """
         self.show_side_panel = show_side_panel
         self.panel_width = panel_width
+        self.edit_mode = edit_mode
+        self.show_preview = show_preview
+        self.markdown_editor = markdown_editor
         self.rtl = rtl
         super().__init__(
             label=label,

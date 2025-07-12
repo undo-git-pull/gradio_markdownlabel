@@ -1,10 +1,12 @@
 <script context="module" lang="ts">
 	export { default as BaseMarkdownRenderer } from "./shared/MarkdownRenderer.svelte";
+	export { default as BaseEditableMarkdownRenderer } from "./shared/EditableMarkdownRenderer.svelte";
 </script>
 
 <script lang="ts">
 	import type { Gradio, SelectData, I18nFormatter } from "@gradio/utils";
 	import MarkdownRenderer from "./shared/MarkdownRenderer.svelte";
+	import EditableMarkdownRenderer from "./shared/EditableMarkdownRenderer.svelte";
 	import { Block, BlockLabel, Empty } from "@gradio/atoms";
 	import { TextHighlight } from "@gradio/icons";
 	import { StatusTracker } from "@gradio/statustracker";
@@ -13,6 +15,9 @@
 	export let gradio: Gradio<{
 		select: SelectData;
 		change: never;
+		edit: never;
+		submit: never;
+		clear: never;
 		clear_status: LoadingStatus;
 	}>;
 	export let elem_id = "";
@@ -32,6 +37,10 @@
 	let old_value: typeof value;
 	export let show_side_panel: boolean = true;
 	export let panel_width: string = "300px";
+	export let edit_mode: string = "split";
+	export let show_preview: boolean = true;
+	export let markdown_editor: string = "textarea";
+	export let interactive: boolean = false;
 	export let label = gradio.i18n("markdown_label.markdown_label");
 	export let container = true;
 	export let scale: number | null = null;
@@ -79,13 +88,37 @@
 	{/if}
 
 	{#if value && value.markdown_content}
-		<MarkdownRenderer
-			markdown_content={value.markdown_content}
-			highlights={value.highlights || []}
-			{show_side_panel}
-			{panel_width}
-			on:select={({ detail }) => gradio.dispatch("select", detail)}
-		/>
+		{#if interactive}
+			<EditableMarkdownRenderer
+				markdown_content={value.markdown_content}
+				highlights={value.highlights || []}
+				{show_side_panel}
+				{panel_width}
+				{edit_mode}
+				{show_preview}
+				{markdown_editor}
+				{interactive}
+				on:select={({ detail }) => gradio.dispatch("select", detail)}
+				on:change={({ detail }) => {
+					value = detail;
+					gradio.dispatch("change");
+				}}
+				on:edit={({ detail }) => gradio.dispatch("edit", detail)}
+				on:save={({ detail }) => {
+					value = detail;
+					gradio.dispatch("submit", detail);
+				}}
+				on:cancel={({ detail }) => gradio.dispatch("clear", detail)}
+			/>
+		{:else}
+			<MarkdownRenderer
+				markdown_content={value.markdown_content}
+				highlights={value.highlights || []}
+				{show_side_panel}
+				{panel_width}
+				on:select={({ detail }) => gradio.dispatch("select", detail)}
+			/>
+		{/if}
 	{:else}
 		<Empty>
 			<TextHighlight />
