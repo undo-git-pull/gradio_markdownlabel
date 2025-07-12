@@ -48,7 +48,7 @@
 					const color = highlight.color || '#e3f2fd';
 					
 					// Create a unique marker that won't interfere with markdown parsing
-					const marker = `<span class="highlight-position" data-index="${highlight.originalIndex}" data-text="${encodeURIComponent(target)}" style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;">${target}</span>`;
+					const marker = `<span class="highlight-position" data-index="${highlight.originalIndex}" data-text="${encodeURIComponent(target)}" style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;" role="button" tabindex="0" aria-label="Highlighted text: ${target.replace(/"/g, '&quot;')}">${target}</span>`;
 					highlightedMarkdown = before + marker + after;
 				}
 			});
@@ -66,7 +66,10 @@
 						return `<span class="highlight-term" 
 									data-index="${index}" 
 									data-term="${highlight.term}"
-									style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;">
+									style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+									role="button" 
+									tabindex="0" 
+									aria-label="Highlighted term: ${highlight.term}">
 								${match}
 							</span>`;
 					});
@@ -96,13 +99,22 @@
 		}
 	}
 
+	function handleKeydown(event: KeyboardEvent) {
+		const target = event.target as HTMLElement;
+		if ((event.key === 'Enter' || event.key === ' ') && 
+			(target.classList.contains('highlight-term') || target.classList.contains('highlight-position'))) {
+			event.preventDefault();
+			handleTermClick(event);
+		}
+	}
+
 	function closeSidePanel() {
 		selectedHighlight = null;
 	}
 </script>
 
 <div class="markdown-container" class:with-panel={show_side_panel && selectedHighlight}>
-	<div class="markdown-content" on:click={handleTermClick}>
+	<div class="markdown-content" on:click={handleTermClick} on:keydown={handleKeydown}>
 		{@html processedHtml}
 	</div>
 	
@@ -277,9 +289,13 @@
 	}
 
 	.markdown-content :global(.highlight-term:hover),
-	.markdown-content :global(.highlight-position:hover) {
+	.markdown-content :global(.highlight-position:hover),
+	.markdown-content :global(.highlight-term:focus),
+	.markdown-content :global(.highlight-position:focus) {
 		opacity: 0.8;
 		transform: scale(1.02);
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
 	}
 
 	/* Responsive design */

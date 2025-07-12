@@ -36,7 +36,6 @@
 	export let container = true;
 	export let scale: number | null = null;
 	export let min_width: number | undefined = undefined;
-	export let interactive: boolean = false;
 	export let show_label = true;
 	export let rtl = false;
 
