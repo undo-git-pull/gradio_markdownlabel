@@ -67,7 +67,6 @@ def handle_content_change(value):
 def handle_edit_start(value):
     """Handle when user starts editing"""
     print("User started editing")
-    return gr.update()
 
 def handle_save(value):
     """Handle when user saves changes"""
