@@ -15,7 +15,7 @@
 	export let selectable = false;
 
 	let activeElementIndex = -1;
-	let ctx: CanvasRenderingContext2D;
+	let ctx: CanvasRenderingContext2D | null = null;
 	let _color_map: Record<string, { primary: string; secondary: string }> = {};
 	let active = "";
 	let selection: Selection | null;

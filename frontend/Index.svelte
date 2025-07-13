@@ -15,9 +15,9 @@
 	export let gradio: Gradio<{
 		select: SelectData;
 		change: never;
-		edit: never;
-		submit: never;
-		clear: never;
+		edit: { markdown_content: string; highlights: any[] };
+		submit: { markdown_content: string; highlights: any[] };
+		clear: { markdown_content: string; highlights: any[] };
 		clear_status: LoadingStatus;
 	}>;
 	export let elem_id = "";

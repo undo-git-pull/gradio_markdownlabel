@@ -21,69 +21,87 @@
 
 	let selectedHighlight: typeof highlights[0] | null = null;
 	let processedHtml: string = '';
+	let panelContent: string = '';
 
 	// Process markdown and apply highlighting
 	$: {
 		if (markdown_content) {
-			// First, parse the markdown to HTML
-			let html = marked(markdown_content);
-			
-			// Separate position-based and term-based highlights
-			const positionHighlights = highlights.filter(h => h.position && h.position.length === 2);
-			const termHighlights = highlights.filter(h => h.term && h.term.trim());
-			
-			// Apply term-based highlights to the HTML first
-			termHighlights.forEach(highlight => {
-				if (highlight.term && highlight.term.trim()) {
-					const index = highlights.indexOf(highlight);
-					const regex = new RegExp(`\\b${escapeRegex(highlight.term)}\\b`, 'gi');
-					html = html.replace(regex, (match) => {
-						const color = highlight.color || '#e3f2fd';
-						return `<span class="highlight-term" 
-									data-index="${index}" 
-									data-term="${highlight.term}"
-									style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
-									role="button" 
-									tabindex="0" 
-									aria-label="Highlighted term: ${highlight.term}">
-								${match}
-							</span>`;
-					});
-				}
-			});
-			
-			// Apply position-based highlights to the HTML
-			// Convert position-based highlights to term-based for simplicity and reliability
-			positionHighlights.forEach(highlight => {
-				const [start, end] = highlight.position!;
-				if (start >= 0 && end <= markdown_content.length && start < end) {
-					const targetText = markdown_content.substring(start, end);
+			processMarkdown();
+		}
+	}
+
+	// Process panel content
+	$: {
+		if (selectedHighlight) {
+			processPanelContent();
+		}
+	}
+
+	async function processMarkdown() {
+		// First, parse the markdown to HTML
+		let html = await marked(markdown_content);
+		
+		// Separate position-based and term-based highlights
+		const positionHighlights = highlights.filter(h => h.position && h.position.length === 2);
+		const termHighlights = highlights.filter(h => h.term && h.term.trim());
+		
+		// Apply term-based highlights to the HTML first
+		termHighlights.forEach(highlight => {
+			if (highlight.term && highlight.term.trim()) {
+				const index = highlights.indexOf(highlight);
+				const regex = new RegExp(`\\b${escapeRegex(highlight.term)}\\b`, 'gi');
+				html = html.replace(regex, (match: string) => {
 					const color = highlight.color || '#e3f2fd';
-					const index = highlights.indexOf(highlight);
-					
-					// Escape the target text for regex and handle multiline/whitespace
-					const escapedText = escapeRegex(targetText).replace(/\s+/g, '\\s+');
-					
-					// Create a regex that only matches text content (not inside HTML tags)
-					const textRegex = new RegExp(`\\b${escapedText}\\b`, 'gi');
-					
-					// Apply the highlight - this will work like term-based highlighting
-					// but using the exact text from the position
-					html = html.replace(textRegex, (match) => {
-						return `<span class="highlight-position" 
-									data-index="${index}" 
-									data-text="${encodeURIComponent(targetText)}"
-									style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
-									role="button" 
-									tabindex="0" 
-									aria-label="Highlighted text: ${targetText.replace(/"/g, '&quot;')}">
-								${match}
-							</span>`;
-					});
-				}
-			});
-			
-			processedHtml = html;
+					return `<span class="highlight-term" 
+								data-index="${index}" 
+								data-term="${highlight.term}"
+								style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+								role="button" 
+								tabindex="0" 
+								aria-label="Highlighted term: ${highlight.term}">
+							${match}
+						</span>`;
+				});
+			}
+		});
+		
+		// Apply position-based highlights to the HTML
+		// Convert position-based highlights to term-based for simplicity and reliability
+		positionHighlights.forEach(highlight => {
+			const [start, end] = highlight.position!;
+			if (start >= 0 && end <= markdown_content.length && start < end) {
+				const targetText = markdown_content.substring(start, end);
+				const color = highlight.color || '#e3f2fd';
+				const index = highlights.indexOf(highlight);
+				
+				// Escape the target text for regex and handle multiline/whitespace
+				const escapedText = escapeRegex(targetText).replace(/\s+/g, '\\s+');
+				
+				// Create a regex that only matches text content (not inside HTML tags)
+				const textRegex = new RegExp(`\\b${escapedText}\\b`, 'gi');
+				
+				// Apply the highlight - this will work like term-based highlighting
+				// but using the exact text from the position
+				html = html.replace(textRegex, (match: string) => {
+					return `<span class="highlight-position" 
+								data-index="${index}" 
+								data-text="${encodeURIComponent(targetText)}"
+								style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+								role="button" 
+								tabindex="0" 
+								aria-label="Highlighted text: ${targetText.replace(/"/g, '&quot;')}">
+							${match}
+						</span>`;
+				});
+			}
+		});
+		
+		processedHtml = html;
+	}
+
+	async function processPanelContent() {
+		if (selectedHighlight) {
+			panelContent = await marked(selectedHighlight.content || 'No additional information available.');
 		}
 	}
 
@@ -138,7 +156,7 @@
 					</div>
 				{/if}
 				<div class="content-text">
-					{@html marked(selectedHighlight.content || 'No additional information available.')}
+					{@html panelContent}
 				</div>
 			</div>
 		</div>
