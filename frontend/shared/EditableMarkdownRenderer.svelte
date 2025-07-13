@@ -2,6 +2,7 @@
 	import { marked } from 'marked';
 	import { createEventDispatcher } from 'svelte';
 	import type { SelectData } from '@gradio/utils';
+	import { Copy } from '@gradio/icons';
 
 	export let markdown_content: string = '';
 	export let highlights: Array<{
@@ -170,14 +171,42 @@
 	function setTab(tab: typeof currentTab) {
 		currentTab = tab;
 	}
+
+	async function copyToClipboard() {
+		try {
+			const contentToCopy = isEditing ? editingContent : markdown_content;
+			if (navigator.clipboard && window.isSecureContext) {
+				await navigator.clipboard.writeText(contentToCopy);
+			} else {
+				// Fallback for older browsers or non-secure contexts
+				const textArea = document.createElement('textarea');
+				textArea.value = contentToCopy;
+				textArea.style.position = 'fixed';
+				textArea.style.left = '-999999px';
+				textArea.style.top = '-999999px';
+				document.body.appendChild(textArea);
+				textArea.focus();
+				textArea.select();
+				document.execCommand('copy');
+				textArea.remove();
+			}
+		} catch (err) {
+			console.error('Failed to copy text: ', err);
+		}
+	}
 </script>
 
 <div class="markdown-container" class:editing={isEditing} class:with-panel={show_side_panel && selectedHighlight}>
-	<!-- Edit Mode Controls -->
-	{#if interactive && !isEditing}
+	<!-- View Mode Controls -->
+	{#if !isEditing}
 		<div class="edit-controls">
-			<button class="edit-btn" on:click={startEditing}>
-				✏️ Edit
+			{#if interactive}
+				<button class="edit-btn" on:click={startEditing}>
+					✏️ Edit
+				</button>
+			{/if}
+			<button class="copy-btn" on:click={copyToClipboard} aria-label="Copy" aria-roledescription="Copy text">
+				<Copy />
 			</button>
 		</div>
 	{/if}
@@ -207,6 +236,9 @@
 					>
 						Preview
 					</button>
+					<button class="copy-btn" on:click={copyToClipboard} aria-label="Copy" aria-roledescription="Copy text">
+						<Copy />
+					</button>
 				</div>
 			{/if}
 		</div>
@@ -220,6 +252,9 @@
 				<div class="editor-section">
 					<div class="editor-header">
 						<h4>Markdown Editor</h4>
+						<button class="copy-btn" on:click={copyToClipboard} aria-label="Copy" aria-roledescription="Copy text">
+							<Copy />
+						</button>
 					</div>
 					<textarea
 						class="markdown-editor"
@@ -365,6 +400,32 @@
 		opacity: 0.7;
 	}
 
+	.copy-btn {
+		padding: var(--size-1);
+		border: 1px solid var(--border-color-primary);
+		border-radius: var(--radius-sm);
+		background: var(--background-fill-primary);
+		cursor: pointer;
+		transition: all 0.2s;
+		margin-left: var(--spacing-sm);
+		width: 24px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--body-text-color);
+	}
+
+	.copy-btn:hover {
+		background: var(--background-fill-secondary);
+		transform: scale(1.05);
+	}
+
+	.copy-btn:active {
+		transform: scale(0.95);
+	}
+
+
 	.content-area {
 		flex: 1;
 		display: flex;
@@ -391,6 +452,9 @@
 		padding: var(--size-2);
 		background: var(--background-fill-secondary);
 		border-bottom: 1px solid var(--border-color-primary);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.editor-header h4, .preview-header h4 {
