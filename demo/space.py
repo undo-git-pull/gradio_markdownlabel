@@ -21,7 +21,7 @@ with gr.Blocks(
 # `gradio_markdownlabel`
 
 <div style="display: flex; gap: 7px;">
-<img alt="Static Badge" src="https://img.shields.io/badge/version%20-%200.0.1%20-%20orange">  
+<a href="https://pypi.org/project/gradio_markdownlabel/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_markdownlabel"></a>  
 </div>
 
 Python library for easily interacting with trained machine learning models
@@ -145,7 +145,6 @@ with gr.Blocks(title="Markdown Label Demo") as demo:
     gr.Markdown("# MarkdownLabel Component Demo")
     gr.Markdown("This demo showcases the MarkdownLabel component with **both term-based and position-based** interactive highlighting and detailed side panel.")
     
-    gr.Markdown("## Example")
     gr.Markdown("Includes both term-based (e.g., 'artificial intelligence') and position-based highlighting (yellow highlights).")
     MarkdownLabel(
         value=example_data,
@@ -189,7 +188,8 @@ with gr.Blocks(title="Markdown Label Demo") as demo:
         value=simple_example,
         label="Simple Position vs Term Example",
         show_side_panel=True,
-        panel_width="300px"
+        panel_width="300px",
+        interactive=True
     )
 
 if __name__ == "__main__":
