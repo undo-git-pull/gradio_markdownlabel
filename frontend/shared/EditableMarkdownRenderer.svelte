@@ -59,14 +59,26 @@
 	}
 
 	async function processMarkdown(contentToRender: string) {
-		// First, parse the markdown to HTML
-		let html = await marked(contentToRender);
-		
 		// Separate position-based and term-based highlights
 		const positionHighlights = highlights.filter(h => h.position && h.position.length === 2);
 		const termHighlights = highlights.filter(h => h.term && h.term.trim());
 		
-		// Apply term-based highlights to the HTML first
+		// Apply position-based highlights first by inserting special markers
+		// Note: Only apply position highlights if contentToRender matches original markdown_content
+		let processedMarkdown = contentToRender;
+		if (contentToRender === markdown_content) {
+			processedMarkdown = applyPositionMarkers(contentToRender, positionHighlights);
+		}
+		
+		// Then parse the markdown to HTML
+		let html = await marked(processedMarkdown);
+		
+		// Replace position markers with actual highlight spans (only if we applied them)
+		if (contentToRender === markdown_content) {
+			html = replacePositionMarkers(html, positionHighlights);
+		}
+		
+		// Apply term-based highlights to the HTML
 		termHighlights.forEach(highlight => {
 			if (highlight.term && highlight.term.trim()) {
 				const index = highlights.indexOf(highlight);
@@ -86,38 +98,61 @@
 			}
 		});
 		
-		// Apply position-based highlights to the HTML
-		// Convert position-based highlights to term-based for simplicity and reliability
+		processedHtml = html;
+	}
+
+	function applyPositionMarkers(content: string, positionHighlights: typeof highlights): string {
+		// Sort highlights by start position in descending order to avoid position shifts
+		const sortedHighlights = [...positionHighlights].sort((a, b) => (b.position![0] - a.position![0]));
+		
+		let result = content;
+		
+		sortedHighlights.forEach(highlight => {
+			const [start, end] = highlight.position!;
+			if (start >= 0 && end <= result.length && start < end) {
+				const targetText = result.substring(start, end);
+				const index = highlights.indexOf(highlight);
+				
+				// Create unique markers that won't interfere with markdown rendering
+				const startMarker = `|||POSHL_START_${index}|||`;
+				const endMarker = `|||POSHL_END_${index}|||`;
+				
+				result = result.substring(0, start) + startMarker + targetText + endMarker + result.substring(end);
+			}
+		});
+		
+		return result;
+	}
+
+	function replacePositionMarkers(html: string, positionHighlights: typeof highlights): string {
 		positionHighlights.forEach(highlight => {
 			const [start, end] = highlight.position!;
-			if (start >= 0 && end <= contentToRender.length && start < end) {
-				const targetText = contentToRender.substring(start, end);
+			if (start >= 0 && end <= markdown_content.length && start < end) {
+				const targetText = markdown_content.substring(start, end);
 				const color = highlight.color || '#e3f2fd';
 				const index = highlights.indexOf(highlight);
 				
-				// Escape the target text for regex and handle multiline/whitespace
-				const escapedText = escapeRegex(targetText).replace(/\s+/g, '\\s+');
+				const startMarker = `|||POSHL_START_${index}|||`;
+				const endMarker = `|||POSHL_END_${index}|||`;
 				
-				// Create a regex that only matches text content (not inside HTML tags)
-				const textRegex = new RegExp(`\\b${escapedText}\\b`, 'gi');
+				// Find and replace the markers with highlight spans
+				const markerRegex = new RegExp(`${escapeRegex(startMarker)}(.*?)${escapeRegex(endMarker)}`, 'g');
 				
-				// Apply the highlight - this will work like term-based highlighting
-				// but using the exact text from the position
-				html = html.replace(textRegex, (match: string) => {
+				html = html.replace(markerRegex, (match, content) => {
 					return `<span class="highlight-position" 
-								data-index="${index}" 
-								data-text="${encodeURIComponent(targetText)}"
-								style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
-								role="button" 
-								tabindex="0" 
-								aria-label="Highlighted text: ${targetText.replace(/"/g, '&quot;')}">
-							${match}
-						</span>`;
+						data-index="${index}" 
+						data-text="${encodeURIComponent(targetText)}"
+						style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+						role="button" 
+						tabindex="0" 
+						aria-label="Highlighted text: ${targetText.replace(/"/g, '&quot;')}">
+						${content}
+					</span>`;
 				});
 			}
 		});
 		
-		processedHtml = html;
+		return html;
 	}
 
 	async function processPanelContent() {
