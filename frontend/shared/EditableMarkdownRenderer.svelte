@@ -113,6 +113,12 @@
 				const targetText = result.substring(start, end);
 				const index = highlights.indexOf(highlight);
 				
+				// Skip if the highlight crosses structural markdown boundaries
+				if (crossesMarkdownBoundary(targetText)) {
+					console.warn(`Position highlight [${start}, ${end}] crosses markdown boundary, skipping`);
+					return;
+				}
+				
 				// Create unique markers that won't interfere with markdown rendering
 				const startMarker = `|||POSHL_START_${index}|||`;
 				const endMarker = `|||POSHL_END_${index}|||`;
@@ -122,6 +128,23 @@
 		});
 		
 		return result;
+	}
+
+	function crossesMarkdownBoundary(text: string): boolean {
+		// Check if the highlighted text crosses markdown structural boundaries
+		// that would break the markdown parsing
+		return (
+			text.includes('\n#') ||           // Header boundaries
+			text.includes('\n\n') ||         // Paragraph boundaries  
+			text.includes('\n-') ||          // List boundaries
+			text.includes('\n*') ||          // List boundaries
+			text.includes('\n1.') ||         // Numbered list boundaries
+			text.includes('\n>') ||          // Blockquote boundaries
+			text.includes('\n```') ||        // Code block boundaries
+			text.includes('\n|') ||          // Table boundaries
+			!!text.match(/^\s*#/) ||         // Starts with header
+			!!text.match(/\n\s*#/)          // Contains header start
+		);
 	}
 
 	function replacePositionMarkers(html: string, positionHighlights: typeof highlights): string {

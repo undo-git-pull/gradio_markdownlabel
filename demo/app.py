@@ -89,6 +89,13 @@ This concludes our comprehensive example with multiple markdown elements for tes
                 "category": "Term Demo", 
                 "color": "#d0167f91"
             },
+            {
+                "position": [30, 37], 
+                "title": "regression test",
+                "content": "Highlight across lines should not render",
+                "category": "Position Demo",
+                "color": "#ffeb3b"
+            },
         ]
     }
     
