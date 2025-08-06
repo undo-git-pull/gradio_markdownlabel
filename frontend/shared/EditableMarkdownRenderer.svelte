@@ -136,7 +136,7 @@
 				const endMarker = `|||POSHL_END_${index}|||`;
 				
 				// Find and replace the markers with highlight spans
-				const markerRegex = new RegExp(`${escapeRegex(startMarker)}(.*?)${escapeRegex(endMarker)}`, 'g');
+				const markerRegex = new RegExp(`\\|\\|\\|POSHL_START_${index}\\|\\|\\|(.*?)\\|\\|\\|POSHL_END_${index}\\|\\|\\|`, 'g');
 				
 				html = html.replace(markerRegex, (match, content) => {
 					return `<span class="highlight-position" 
