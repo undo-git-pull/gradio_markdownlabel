@@ -24,7 +24,7 @@ with gr.Blocks(
 <a href="https://pypi.org/project/gradio_markdownlabel/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_markdownlabel"></a>  
 </div>
 
-Python library for easily interacting with trained machine learning models
+Editable Markdown component with label functionality 
 """, elem_classes=["md-custom"], header_links=True)
     app.render()
     gr.Markdown(

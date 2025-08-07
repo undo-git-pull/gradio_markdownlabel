@@ -12,7 +12,7 @@ app_file: space.py
 # `gradio_markdownlabel`
 <a href="https://pypi.org/project/gradio_markdownlabel/" target="_blank"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/gradio_markdownlabel"></a>  
 
-Python library for easily interacting with trained machine learning models
+Editable Markdown component with label functionality 
 
 ## Installation
 

@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 [project]
 name = "gradio_markdownlabel"
 version = "0.0.5"
-description = "Python library for easily interacting with trained machine learning models"
+description = "Editable Markdown component with label functionality "
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.8"
