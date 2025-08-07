@@ -59,40 +59,7 @@ Here are some important points:
 2. *Second item* - Another important point  
 3. Third item with `inline code`
 4. Fourth item containing [a link](https://example.com)
-
-#### Unordered Lists
-- Bullet point one
-- Bullet point two with **bold text**
-- Final bullet point
-
-### Code Block Example
-```python
-def hello_world():
-    print("Hello, World!")
-    return "success"
-```
-
-### Tables
-| Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Data A   | Data B   | Data C   |
-
-### Blockquotes
-> This is a blockquote with some **important** information.
-> 
-> It can span multiple lines and contain *emphasis*.
-
-### Mixed Content
-The document contains various **formatting** options including:
-
-- *Italicized text* for emphasis
-- **Bold text** for importance  
-- `Inline code` for technical terms
-- Links like [this one](https://example.com)
-
-#### Final Section
-This concludes our comprehensive example with multiple markdown elements for testing position-based highlighting accuracy.\"\"\", 
+\"\"\", 
         "highlights": [
             {
                 "position": [56, 61],  # "quick" in "The quick brown fox", note the 2nd quick is not highlighted
@@ -114,21 +81,7 @@ This concludes our comprehensive example with multiple markdown elements for tes
                 "content": "Position-based highlight",
                 "category": "Position Demo",
                 "color": "#ffeb3b"
-            },
-            {
-                "position": [989, 999],
-                "title": "Italicized",
-                "content": "Highlighting 'Italicized'",
-                "category": "Position Demo", 
-                "color": "#ff9800"
-            },
-            {
-                "term": "formatting",
-                "title": "formatting (Term Match)",
-                "content": "Highlighted using term matching - will match anywhere this term appears.",
-                "category": "Term Demo", 
-                "color": "#d0167f91"
-            },
+            }
         ]
     }
     
