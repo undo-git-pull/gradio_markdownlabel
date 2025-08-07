@@ -61,7 +61,7 @@
 					return `<span class="highlight-term" 
 								data-index="${index}" 
 								data-term="${highlight.term}"
-								style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+								style="${getHighlightStyle(color)}"
 								role="button" 
 								tabindex="0" 
 								aria-label="Highlighted term: ${highlight.term}">
@@ -138,7 +138,7 @@
 					return `<span class="highlight-position" 
 						data-index="${index}" 
 						data-text="${encodeURIComponent(targetText)}"
-						style="background-color: ${color}; cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: all 0.2s;"
+						style="${getHighlightStyle(color)}"
 						role="button" 
 						tabindex="0" 
 						aria-label="Highlighted text: ${targetText.replace(/"/g, '&quot;')}">
@@ -159,6 +159,12 @@
 
 	function escapeRegex(string: string): string {
 		return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+
+	// Browser implementation CSS char spacing is broken, need to adjust to excess right pad. 
+	// https://github.com/w3c/csswg-drafts/issues/1518
+	function getHighlightStyle(color: string): string {
+		return `background-color: ${color}; cursor: pointer; padding: 2px 2px; border-radius: 3px; transition: all 0.2s; padding-left: 4px;`;
 	}
 
 	function handleTermClick(event: Event) {
